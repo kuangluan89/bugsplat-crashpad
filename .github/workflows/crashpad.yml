@@ -175,11 +175,22 @@ jobs:
           fi
 
           # Copy include directories (shared between debug and release)
-          # cp -r "$CRASHPAD_ROOT"/*.h artifacts/${{ matrix.platform }}/include/crashpad/ 2>/dev/null || true
-          cp -r "$CRASHPAD_ROOT"/client/*.h artifacts/${{ matrix.platform }}/include/client/ 2>/dev/null || true
-          cp -r "$CRASHPAD_ROOT"/util/*.h artifacts/${{ matrix.platform }}/include/util/ 2>/dev/null || true
-          # cp -r "$CRASHPAD_ROOT"/base/*.h artifacts/${{ matrix.platform }}/include/base/ 2>/dev/null || true
-          cp -r "$CRASHPAD_ROOT"/third_party/mini_chromium/mini_chromium/* artifacts/${{ matrix.platform }}/include/mini_chromium/ 2>/dev/null || true
+          # Copy client headers
+          if [ -d "$CRASHPAD_ROOT/client" ]; then
+            find "$CRASHPAD_ROOT/client" -name "*.h" -exec cp {} artifacts/${{ matrix.platform }}/include/client/ \; 2>/dev/null || true
+          fi
+          
+          # Copy util headers (recursively to maintain directory structure)
+          if [ -d "$CRASHPAD_ROOT/util" ]; then
+            cp -r "$CRASHPAD_ROOT/util" artifacts/${{ matrix.platform }}/include/ 2>/dev/null || true
+            # Remove non-header files from util directory
+            find artifacts/${{ matrix.platform }}/include/util -type f ! -name "*.h" -delete 2>/dev/null || true
+          fi
+          
+          # Copy mini_chromium headers
+          if [ -d "$CRASHPAD_ROOT/third_party/mini_chromium/mini_chromium" ]; then
+            cp -r "$CRASHPAD_ROOT"/third_party/mini_chromium/mini_chromium/* artifacts/${{ matrix.platform }}/include/mini_chromium/ 2>/dev/null || true
+          fi
 
           # Verify required files exist
           echo "Verifying debug artifact files..."
