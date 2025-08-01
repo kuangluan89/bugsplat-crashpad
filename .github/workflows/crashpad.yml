@@ -14,7 +14,7 @@ jobs:
           - os: windows-latest
             platform: windows
             script: scripts/build_crashpad_windows_msvc.ps1
-            artifact_path: third_party/crashpad/out/win-debug
+            artifact_path: third_party/crashpad/out/win-debug-md
           - os: macos-latest
             platform: macos
             script: scripts/build_crashpad_macos.sh
@@ -90,9 +90,11 @@ jobs:
         shell: bash
         run: |
           # Create a directory for artifacts with debug and release subdirectories
-          mkdir -p artifacts/${{ matrix.platform }}/debug/lib
+          mkdir -p artifacts/${{ matrix.platform }}/debug/lib_md
+          mkdir -p artifacts/${{ matrix.platform }}/debug/lib_mt
           mkdir -p artifacts/${{ matrix.platform }}/debug/bin
-          mkdir -p artifacts/${{ matrix.platform }}/release/lib
+          mkdir -p artifacts/${{ matrix.platform }}/release/lib_md
+          mkdir -p artifacts/${{ matrix.platform }}/release/lib_mt
           mkdir -p artifacts/${{ matrix.platform }}/release/bin
           mkdir -p artifacts/${{ matrix.platform }}/include/crashpad
           mkdir -p artifacts/${{ matrix.platform }}/include/mini_chromium
@@ -102,8 +104,10 @@ jobs:
           
           # Set debug and release output directories
           if [ "${{ matrix.platform }}" == "windows" ]; then
-            DEBUG_OUT_DIR="third_party/crashpad/out/win-debug"
-            RELEASE_OUT_DIR="third_party/crashpad/out/win-release"
+            DEBUG_MD_OUT_DIR="third_party/crashpad/out/win-debug-md"
+            DEBUG_MT_OUT_DIR="third_party/crashpad/out/win-debug-mt"
+            RELEASE_MD_OUT_DIR="third_party/crashpad/out/win-release-md"
+            RELEASE_MT_OUT_DIR="third_party/crashpad/out/win-release-mt"
           elif [ "${{ matrix.platform }}" == "macos" ]; then
             DEBUG_OUT_DIR="third_party/crashpad/out/macos-debug"
             RELEASE_OUT_DIR="third_party/crashpad/out/macos-release"
@@ -114,45 +118,58 @@ jobs:
 
           # Copy platform-specific debug libraries and executables
           if [ "${{ matrix.platform }}" == "windows" ]; then
-            # Windows debug libraries
-            cp "$DEBUG_OUT_DIR/obj/client/client.lib" artifacts/${{ matrix.platform }}/debug/lib/
-            cp "$DEBUG_OUT_DIR/obj/client/common.lib" artifacts/${{ matrix.platform }}/debug/lib/
-            cp "$DEBUG_OUT_DIR/obj/util/util.lib" artifacts/${{ matrix.platform }}/debug/lib/
-            cp "$DEBUG_OUT_DIR/obj/third_party/mini_chromium/mini_chromium/base/base.lib" artifacts/${{ matrix.platform }}/debug/lib/
-            cp "$DEBUG_OUT_DIR/crashpad_handler.exe" artifacts/${{ matrix.platform }}/debug/bin/
-            # Windows release libraries
-            cp "$RELEASE_OUT_DIR/obj/client/client.lib" artifacts/${{ matrix.platform }}/release/lib/
-            cp "$RELEASE_OUT_DIR/obj/client/common.lib" artifacts/${{ matrix.platform }}/release/lib/
-            cp "$RELEASE_OUT_DIR/obj/util/util.lib" artifacts/${{ matrix.platform }}/release/lib/
-            cp "$RELEASE_OUT_DIR/obj/third_party/mini_chromium/mini_chromium/base/base.lib" artifacts/${{ matrix.platform }}/release/lib/
-            cp "$RELEASE_OUT_DIR/crashpad_handler.exe" artifacts/${{ matrix.platform }}/release/bin/
+            # Windows debug MD libraries
+            cp "$DEBUG_MD_OUT_DIR/obj/client/client.lib" artifacts/${{ matrix.platform }}/debug/lib_md/
+            cp "$DEBUG_MD_OUT_DIR/obj/client/common.lib" artifacts/${{ matrix.platform }}/debug/lib_md/
+            cp "$DEBUG_MD_OUT_DIR/obj/util/util.lib" artifacts/${{ matrix.platform }}/debug/lib_md/
+            cp "$DEBUG_MD_OUT_DIR/obj/third_party/mini_chromium/mini_chromium/base/base.lib" artifacts/${{ matrix.platform }}/debug/lib_md/
+            cp "$DEBUG_MD_OUT_DIR/crashpad_handler.exe" artifacts/${{ matrix.platform }}/debug/bin/
+            
+            # Windows debug MT libraries
+            cp "$DEBUG_MT_OUT_DIR/obj/client/client.lib" artifacts/${{ matrix.platform }}/debug/lib_mt/
+            cp "$DEBUG_MT_OUT_DIR/obj/client/common.lib" artifacts/${{ matrix.platform }}/debug/lib_mt/
+            cp "$DEBUG_MT_OUT_DIR/obj/util/util.lib" artifacts/${{ matrix.platform }}/debug/lib_mt/
+            cp "$DEBUG_MT_OUT_DIR/obj/third_party/mini_chromium/mini_chromium/base/base.lib" artifacts/${{ matrix.platform }}/debug/lib_mt/
+            
+            # Windows release MD libraries
+            cp "$RELEASE_MD_OUT_DIR/obj/client/client.lib" artifacts/${{ matrix.platform }}/release/lib_md/
+            cp "$RELEASE_MD_OUT_DIR/obj/client/common.lib" artifacts/${{ matrix.platform }}/release/lib_md/
+            cp "$RELEASE_MD_OUT_DIR/obj/util/util.lib" artifacts/${{ matrix.platform }}/release/lib_md/
+            cp "$RELEASE_MD_OUT_DIR/obj/third_party/mini_chromium/mini_chromium/base/base.lib" artifacts/${{ matrix.platform }}/release/lib_md/
+            cp "$RELEASE_MD_OUT_DIR/crashpad_handler.exe" artifacts/${{ matrix.platform }}/release/bin/
+            
+            # Windows release MT libraries
+            cp "$RELEASE_MT_OUT_DIR/obj/client/client.lib" artifacts/${{ matrix.platform }}/release/lib_mt/
+            cp "$RELEASE_MT_OUT_DIR/obj/client/common.lib" artifacts/${{ matrix.platform }}/release/lib_mt/
+            cp "$RELEASE_MT_OUT_DIR/obj/util/util.lib" artifacts/${{ matrix.platform }}/release/lib_mt/
+            cp "$RELEASE_MT_OUT_DIR/obj/third_party/mini_chromium/mini_chromium/base/base.lib" artifacts/${{ matrix.platform }}/release/lib_mt/
           elif [ "${{ matrix.platform }}" == "macos" ]; then
-            # macOS debug libraries
-            cp "$DEBUG_OUT_DIR/obj/client/libclient.a" artifacts/${{ matrix.platform }}/debug/lib/
-            cp "$DEBUG_OUT_DIR/obj/client/libcommon.a" artifacts/${{ matrix.platform }}/debug/lib/
-            cp "$DEBUG_OUT_DIR/obj/util/libutil.a" artifacts/${{ matrix.platform }}/debug/lib/
-            cp "$DEBUG_OUT_DIR/obj/util/libmig_output.a" artifacts/${{ matrix.platform }}/debug/lib/
-            cp "$DEBUG_OUT_DIR/obj/third_party/mini_chromium/mini_chromium/base/libbase.a" artifacts/${{ matrix.platform }}/debug/lib/
+            # macOS debug libraries (use lib_md directory for consistency)
+            cp "$DEBUG_OUT_DIR/obj/client/libclient.a" artifacts/${{ matrix.platform }}/debug/lib_md/
+            cp "$DEBUG_OUT_DIR/obj/client/libcommon.a" artifacts/${{ matrix.platform }}/debug/lib_md/
+            cp "$DEBUG_OUT_DIR/obj/util/libutil.a" artifacts/${{ matrix.platform }}/debug/lib_md/
+            cp "$DEBUG_OUT_DIR/obj/util/libmig_output.a" artifacts/${{ matrix.platform }}/debug/lib_md/
+            cp "$DEBUG_OUT_DIR/obj/third_party/mini_chromium/mini_chromium/base/libbase.a" artifacts/${{ matrix.platform }}/debug/lib_md/
             cp "$DEBUG_OUT_DIR/crashpad_handler" artifacts/${{ matrix.platform }}/debug/bin/
-            # macOS release libraries
-            cp "$RELEASE_OUT_DIR/obj/client/libclient.a" artifacts/${{ matrix.platform }}/release/lib/
-            cp "$RELEASE_OUT_DIR/obj/client/libcommon.a" artifacts/${{ matrix.platform }}/release/lib/
-            cp "$RELEASE_OUT_DIR/obj/util/libutil.a" artifacts/${{ matrix.platform }}/release/lib/
-            cp "$RELEASE_OUT_DIR/obj/util/libmig_output.a" artifacts/${{ matrix.platform }}/release/lib/
-            cp "$RELEASE_OUT_DIR/obj/third_party/mini_chromium/mini_chromium/base/libbase.a" artifacts/${{ matrix.platform }}/release/lib/
+            # macOS release libraries (use lib_md directory for consistency)
+            cp "$RELEASE_OUT_DIR/obj/client/libclient.a" artifacts/${{ matrix.platform }}/release/lib_md/
+            cp "$RELEASE_OUT_DIR/obj/client/libcommon.a" artifacts/${{ matrix.platform }}/release/lib_md/
+            cp "$RELEASE_OUT_DIR/obj/util/libutil.a" artifacts/${{ matrix.platform }}/release/lib_md/
+            cp "$RELEASE_OUT_DIR/obj/util/libmig_output.a" artifacts/${{ matrix.platform }}/release/lib_md/
+            cp "$RELEASE_OUT_DIR/obj/third_party/mini_chromium/mini_chromium/base/libbase.a" artifacts/${{ matrix.platform }}/release/lib_md/
             cp "$RELEASE_OUT_DIR/crashpad_handler" artifacts/${{ matrix.platform }}/release/bin/
           else # Linux
-            # Linux debug libraries
-            cp "$DEBUG_OUT_DIR/obj/client/libclient.a" artifacts/${{ matrix.platform }}/debug/lib/
-            cp "$DEBUG_OUT_DIR/obj/client/libcommon.a" artifacts/${{ matrix.platform }}/debug/lib/
-            cp "$DEBUG_OUT_DIR/obj/util/libutil.a" artifacts/${{ matrix.platform }}/debug/lib/
-            cp "$DEBUG_OUT_DIR/obj/third_party/mini_chromium/mini_chromium/base/libbase.a" artifacts/${{ matrix.platform }}/debug/lib/
+            # Linux debug libraries (use lib_md directory for consistency)
+            cp "$DEBUG_OUT_DIR/obj/client/libclient.a" artifacts/${{ matrix.platform }}/debug/lib_md/
+            cp "$DEBUG_OUT_DIR/obj/client/libcommon.a" artifacts/${{ matrix.platform }}/debug/lib_md/
+            cp "$DEBUG_OUT_DIR/obj/util/libutil.a" artifacts/${{ matrix.platform }}/debug/lib_md/
+            cp "$DEBUG_OUT_DIR/obj/third_party/mini_chromium/mini_chromium/base/libbase.a" artifacts/${{ matrix.platform }}/debug/lib_md/
             cp "$DEBUG_OUT_DIR/crashpad_handler" artifacts/${{ matrix.platform }}/debug/bin/
-            # Linux release libraries
-            cp "$RELEASE_OUT_DIR/obj/client/libclient.a" artifacts/${{ matrix.platform }}/release/lib/
-            cp "$RELEASE_OUT_DIR/obj/client/libcommon.a" artifacts/${{ matrix.platform }}/release/lib/
-            cp "$RELEASE_OUT_DIR/obj/util/libutil.a" artifacts/${{ matrix.platform }}/release/lib/
-            cp "$RELEASE_OUT_DIR/obj/third_party/mini_chromium/mini_chromium/base/libbase.a" artifacts/${{ matrix.platform }}/release/lib/
+            # Linux release libraries (use lib_md directory for consistency)
+            cp "$RELEASE_OUT_DIR/obj/client/libclient.a" artifacts/${{ matrix.platform }}/release/lib_md/
+            cp "$RELEASE_OUT_DIR/obj/client/libcommon.a" artifacts/${{ matrix.platform }}/release/lib_md/
+            cp "$RELEASE_OUT_DIR/obj/util/libutil.a" artifacts/${{ matrix.platform }}/release/lib_md/
+            cp "$RELEASE_OUT_DIR/obj/third_party/mini_chromium/mini_chromium/base/libbase.a" artifacts/${{ matrix.platform }}/release/lib_md/
             cp "$RELEASE_OUT_DIR/crashpad_handler" artifacts/${{ matrix.platform }}/release/bin/
           fi
 
@@ -165,10 +182,16 @@ jobs:
 
           # Verify required files exist
           echo "Verifying debug artifact files..."
-          ls -la artifacts/${{ matrix.platform }}/debug/lib/
+          ls -la artifacts/${{ matrix.platform }}/debug/lib_md/
+          if [ "${{ matrix.platform }}" == "windows" ]; then
+            ls -la artifacts/${{ matrix.platform }}/debug/lib_mt/
+          fi
           ls -la artifacts/${{ matrix.platform }}/debug/bin/
           echo "Verifying release artifact files..."
-          ls -la artifacts/${{ matrix.platform }}/release/lib/
+          ls -la artifacts/${{ matrix.platform }}/release/lib_md/
+          if [ "${{ matrix.platform }}" == "windows" ]; then
+            ls -la artifacts/${{ matrix.platform }}/release/lib_mt/
+          fi
           ls -la artifacts/${{ matrix.platform }}/release/bin/
 
           # Create a build info file
@@ -176,7 +199,11 @@ jobs:
           echo "Platform: ${{ matrix.platform }}" >> artifacts/${{ matrix.platform }}/build_info.txt
           echo "OS: ${{ matrix.os }}" >> artifacts/${{ matrix.platform }}/build_info.txt
           echo "Commit: ${{ github.sha }}" >> artifacts/${{ matrix.platform }}/build_info.txt
-          echo "Configurations: Debug, Release" >> artifacts/${{ matrix.platform }}/build_info.txt
+          if [ "${{ matrix.platform }}" == "windows" ]; then
+            echo "Configurations: Debug (MD/MT), Release (MD/MT)" >> artifacts/${{ matrix.platform }}/build_info.txt
+          else
+            echo "Configurations: Debug, Release" >> artifacts/${{ matrix.platform }}/build_info.txt
+          fi
 
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
@@ -262,10 +289,12 @@ jobs:
             ```
             crashpad-<platform>/
             ├── debug/
-            │   ├── lib/           # Debug libraries
+            │   ├── lib_md/           # MD Debug libraries
+            │   ├── lib_mt/           # MT Debug libraries
             │   └── bin/           # Debug crashpad_handler
             ├── release/
-            │   ├── lib/           # Release libraries  
+            │   ├── lib_md/           # MD Release libraries
+            │   ├── lib_mt/           # MT Release libraries
             │   └── bin/           # Release crashpad_handler
             ├── include/
             │   ├── crashpad/      # Crashpad headers
