@@ -96,7 +96,8 @@ jobs:
           mkdir -p artifacts/${{ matrix.platform }}/release/lib_md
           mkdir -p artifacts/${{ matrix.platform }}/release/lib_mt
           mkdir -p artifacts/${{ matrix.platform }}/release/bin
-          mkdir -p artifacts/${{ matrix.platform }}/include/crashpad
+          mkdir -p artifacts/${{ matrix.platform }}/include/client
+          mkdir -p artifacts/${{ matrix.platform }}/include/util
           mkdir -p artifacts/${{ matrix.platform }}/include/mini_chromium
 
           # Set platform-specific paths
@@ -174,10 +175,10 @@ jobs:
           fi
 
           # Copy include directories (shared between debug and release)
-          cp -r "$CRASHPAD_ROOT"/*.h artifacts/${{ matrix.platform }}/include/crashpad/ 2>/dev/null || true
-          cp -r "$CRASHPAD_ROOT"/client/*.h artifacts/${{ matrix.platform }}/include/crashpad/ 2>/dev/null || true
-          cp -r "$CRASHPAD_ROOT"/util/*.h artifacts/${{ matrix.platform }}/include/crashpad/ 2>/dev/null || true
-          cp -r "$CRASHPAD_ROOT"/base/*.h artifacts/${{ matrix.platform }}/include/crashpad/ 2>/dev/null || true
+          # cp -r "$CRASHPAD_ROOT"/*.h artifacts/${{ matrix.platform }}/include/crashpad/ 2>/dev/null || true
+          cp -r "$CRASHPAD_ROOT"/client/*.h artifacts/${{ matrix.platform }}/include/client/ 2>/dev/null || true
+          cp -r "$CRASHPAD_ROOT"/util/*.h artifacts/${{ matrix.platform }}/include/util/ 2>/dev/null || true
+          # cp -r "$CRASHPAD_ROOT"/base/*.h artifacts/${{ matrix.platform }}/include/base/ 2>/dev/null || true
           cp -r "$CRASHPAD_ROOT"/third_party/mini_chromium/mini_chromium/* artifacts/${{ matrix.platform }}/include/mini_chromium/ 2>/dev/null || true
 
           # Verify required files exist
@@ -291,15 +292,16 @@ jobs:
             ├── debug/
             │   ├── lib_md/           # MD Debug libraries
             │   ├── lib_mt/           # MT Debug libraries
-            │   └── bin/           # Debug crashpad_handler
+            │   └── bin/              # Debug crashpad_handler
             ├── release/
             │   ├── lib_md/           # MD Release libraries
             │   ├── lib_mt/           # MT Release libraries
-            │   └── bin/           # Release crashpad_handler
+            │   └── bin/              # Release crashpad_handler
             ├── include/
-            │   ├── crashpad/      # Crashpad headers
-            │   └── mini_chromium/ # Mini Chromium headers
-            └── build_info.txt     # Build metadata
+            │   ├── crashpad/         # Crashpad headers
+            │   ├── util/             # util headers
+            │   └── mini_chromium/    # Mini Chromium headers
+            └── build_info.txt        # Build metadata
             ```
             
             ### Security Verification
