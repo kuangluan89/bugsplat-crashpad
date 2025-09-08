@@ -22,6 +22,7 @@ This project demonstrates how to:
 - Set up a CMake project for cross-platform development
 - Integrate Google's Crashpad library for crash reporting
 - Create a simple crashing application that generates crash reports
+- Configure a WER callback for catching stack buffer overruns and fail fast exceptions (Windows only)
 
 ## Prerequisites ☑️
 
@@ -46,7 +47,6 @@ This project demonstrates how to:
 1. Clone the depot_tools repository:
 
 ```bash
-# For Linux/macOS
 git clone https://chromium.googlesource.com/chromium/tools/depot_tools.git
 ```
 
@@ -58,8 +58,9 @@ export PATH="$PATH:/path/to/depot_tools"
 ```
 
 ```powershell
-# For Windows - add to system environment variables or use:
+# For Windows - add to system environment variables or use the following powershell commands:
 $env:Path = "C:\path\to\depot_tools;$env:Path"
+[Environment]::SetEnvironmentVariable("PATH", $env:PATH, "User")
 ```
 
 3. For Windows, you also need to run:
@@ -91,7 +92,7 @@ The build scripts will automatically fetch and build Crashpad using `depot_tools
 ./scripts/build_macos.sh
 
 # Run the application
-./build/MyCMakeCrasher
+./build/Debug/MyCMakeCrasher
 ```
 
 ### Linux
@@ -101,7 +102,7 @@ The build scripts will automatically fetch and build Crashpad using `depot_tools
 ./scripts/build_linux.sh
 
 # Run the application
-./build/MyCMakeCrasher
+./build/Debug/MyCMakeCrasher
 ```
 
 ### Windows
@@ -116,7 +117,31 @@ The build scripts will automatically fetch and build Crashpad using `depot_tools
 
 ## Testing Crash Reporting 🧪
 
-The application will crash immediately upon launch to demonstrate the crash reporting functionality. Crashes will be automatically uploaded to BugSplat. To view crashes, navigate to the [Dashboard](https://app.bugsplat.com/v2/dashboard) page and ensure the correct database is selected.
+> [!NOTE]
+> To configure your Windows app to catch stack buffer overruns please see the [WER](https://github.com/BugSplat-Git/bugsplat-crashpad/wiki/WER) page in this repo's Wiki.
+
+The application will crash immediately upon launch to demonstrate the crash reporting functionality. Crashes will be automatically uploaded to BugSplat. You can test various types of crashes by commenting/uncommenting calls to `loadCrashFunction` in [main.cpp](./main.cpp). 
+
+```cpp
+// ========================================
+// CRASH TYPE SELECTION
+// ========================================
+// Uncomment ONE of the following crash types to test different scenarios:
+
+// 1. NULL POINTER DEREFERENCE
+crash_func_t crash_func = loadCrashFunction("crash");
+
+// 2. ACCESS VIOLATION
+// crash_func_t crash_func = loadCrashFunction("crashAccessViolation");
+
+// 3. STACK OVERFLOW
+// crash_func_t crash_func = loadCrashFunction("crashStackOverflow");
+
+// 4. STACK BUFFER OVERRUN (WER callback required for Windows see https://github.com/BugSplat-Git/bugsplat-crashpad/wiki/WER)
+// crash_func_t crash_func = loadCrashFunction("crashStackOverrun");
+```
+
+Once you've generated a crash, you can view the report on the [Dashboard](https://app.bugsplat.com/v2/dashboard) page. Be sure to verify the correct database is selected in the dropdown.
 
 <img width="1728" alt="BugSplat Dashboard" src="https://github.com/user-attachments/assets/36572a23-991d-416b-8bdb-bb3627c803cb" />
 

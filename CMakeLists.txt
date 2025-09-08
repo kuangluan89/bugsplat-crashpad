@@ -122,8 +122,14 @@ else() # Linux
         SOVERSION 2)
 endif()
 
-# Add executable
-add_executable(MyCMakeCrasher main.cpp)
+
+
+# Add executable with platform-specific source files
+if(WIN32)
+    add_executable(MyCMakeCrasher main.cpp paths.cpp windows.cpp)
+else()
+    add_executable(MyCMakeCrasher main.cpp paths.cpp)
+endif()
 
 # Platform-specific libraries and link order
 if(APPLE)
@@ -163,6 +169,15 @@ add_custom_command(TARGET MyCMakeCrasher POST_BUILD
     ${CRASHPAD_HANDLER}
     ${CMAKE_CURRENT_BINARY_DIR}/${OUTPUT_CONFIG_DIR}/crashpad_handler${CMAKE_EXECUTABLE_SUFFIX}
 )
+
+# Copy Crashpad's WER callback DLL to build directory (Windows only)
+if(WIN32)
+    add_custom_command(TARGET MyCMakeCrasher POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -E copy
+        ${CRASHPAD_OUT_DIR}/crashpad_wer.dll
+        ${CMAKE_CURRENT_BINARY_DIR}/${OUTPUT_CONFIG_DIR}/crashpad_wer.dll
+    )
+endif()
 
 # Create attachment.txt in the build directory
 add_custom_command(TARGET MyCMakeCrasher POST_BUILD
@@ -226,6 +241,9 @@ install(TARGETS MyCMakeCrasher DESTINATION bin)
 install(TARGETS crash DESTINATION bin)
 install(FILES ${CMAKE_CURRENT_BINARY_DIR}/${OUTPUT_CONFIG_DIR}/crashpad_handler${CMAKE_EXECUTABLE_SUFFIX} DESTINATION bin)
 install(FILES ${CMAKE_CURRENT_BINARY_DIR}/${OUTPUT_CONFIG_DIR}/attachment.txt DESTINATION bin)
+if(WIN32)
+    install(FILES ${CMAKE_CURRENT_BINARY_DIR}/${OUTPUT_CONFIG_DIR}/crashpad_wer.dll DESTINATION bin)
+endif()
 
 # Symbol upload target - updated to use platform-specific scripts
 if(WIN32)
